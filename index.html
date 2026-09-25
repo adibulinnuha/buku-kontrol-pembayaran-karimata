@@ -132,60 +132,15 @@ function render(){
 }
 function renderBayar(){
  const q=(document.getElementById("search").value||"").toLowerCase(), f=document.getElementById("statusFilter").value, d=selectedDate();
- if(!d){document.getElementById("table").innerHTML="<div class="notice warn">Tentukan tanggal pembayaran terlebih dahulu.</div>";return}
+ if(!d){document.getElementById("table").innerHTML='<div class="notice warn">Tentukan tanggal pembayaran terlebih dahulu.</div>';return}
  let list=DATA.filter(r=>!q||r.nama_pedagang.toLowerCase().includes(q)||String(r.no_reg).includes(q));
  if(f==="paid")list=list.filter(r=>idPay(r.id,d));if(f==="unpaid")list=list.filter(r=>!idPay(r.id,d));
  document.getElementById("table").innerHTML=`<div class="notice"><b>Tanggal pembayaran:</b> ${new Date(d+"T00:00:00").toLocaleDateString("id-ID",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})} · <b>Petugas:</b> ${operator?esc(operator):"belum dipilih"}</div><div class="tablewrap"><table class="table"><thead><tr><th>No. Reg</th><th>Nama</th><th>Tarif</th><th>Status tanggal terpilih</th><th>Petugas</th><th>Aksi</th></tr></thead><tbody>${list.map(r=>{const p=idPay(r.id,d);const dup=DATA.filter(x=>x.no_reg===r.no_reg).length;return `<tr><td class="reg">${esc(r.no_reg)} ${dup>1?`<span class="badge warn">ganda ${dup}x</span>`:""}</td><td><b>${esc(r.nama_pedagang)}</b>${r.catatan?`<div class="muted small">${esc(r.catatan)}</div>`:""}</td><td>${money(r.tarif)}</td><td>${p?'<span class="badge ok">✓ SUDAH BAYAR</span>':'<span class="badge warn">BELUM BAYAR</span>'}</td><td>${p?esc(p.petugas_nama):"—"}</td><td>${p?`<button class="pay done" onclick="undoPayment(${r.id},'${d}')">✓ Tercatat</button>`:`<button class="pay" onclick="recordPayment(${r.id})">BAYAR</button>`}</td></tr>`}).join("")}</tbody></table></div>`
 }
 function renderRekap(){
  const m=month();
- const [yy,mm]=m.split('-').map(Number);
- const daysInMonth=new Date(yy,mm,0).getDate();
- const rows=DATA.map(r=>{
-   const ps=PAYMENTS.filter(p=>String(p.master_id)===String(r.id)&&p.tanggal.slice(0,7)===m);
-   const dates=[...new Set(ps.map(p=>p.tanggal))].sort();
-   const missing=[];
-   for(let d=1;d<=daysInMonth;d++){
-     const date=`${m}-${String(d).padStart(2,'0')}`;
-     if(!dates.includes(date)) missing.push(date);
-   }
-   return {...r,days:dates.length,missing:missing.length,missingDates:missing.map(x=>x.slice(8)).join(', '),total:dates.length*Number(r.tarif||0),ops:[...new Set(ps.map(p=>p.petugas_nama))].join(', ')};
- }).sort((a,b)=>a.nama_pedagang.localeCompare(b.nama_pedagang));
-
- const groups={};
- DATA.forEach(r=>{
-   const key=r.nama_pedagang||'[TANPA NAMA]';
-   if(!groups[key]) groups[key]={nama:key,regs:0,days:0,total:0,missing:0};
-   const row=rows.find(x=>String(x.id)===String(r.id));
-   groups[key].regs++;
-   groups[key].days+=row.days;
-   groups[key].total+=row.total;
-   groups[key].missing+=row.missing;
- });
- const summary=Object.values(groups).sort((a,b)=>a.nama.localeCompare(b.nama));
- const totalPaidDays=rows.reduce((s,r)=>s+r.days,0);
- const totalAmount=rows.reduce((s,r)=>s+r.total,0);
- document.getElementById("view-rekap").innerHTML=`
- <div class="card" style="margin-bottom:12px">
-   <b>Rekap bulanan pedagang — ${m}</b>
-   <div class="small muted">Perhitungan berdasarkan centang pembayaran pada setiap tanggal. Bulan ini memiliki <b>${daysInMonth} hari</b>.</div>
-   <div class="grid" style="margin-top:12px">
-     <div class="card"><div class="label">Total Hari Bayar</div><div class="value">${totalPaidDays}</div></div>
-     <div class="card"><div class="label">Total Pembayaran</div><div class="value">${money(totalAmount)}</div></div>
-   </div>
- </div>
- <div class="card" style="margin-bottom:12px">
-   <b>Ringkasan per pedagang</b>
-   <div class="tablewrap" style="margin-top:10px"><table class="table"><thead><tr><th>Nama Pedagang</th><th>Jml Registrasi</th><th>Total Hari Bayar</th><th>Total Hari Tidak Bayar</th><th>Total Pembayaran</th></tr></thead><tbody>
-   ${summary.map(r=>`<tr><td><b>${esc(r.nama)}</b></td><td>${r.regs}</td><td><b>${r.days}</b></td><td>${r.missing}</td><td><b>${money(r.total)}</b></td></tr>`).join('')}
-   </tbody></table></div>
- </div>
- <div class="card">
-   <b>Detail per nomor registrasi</b>
-   <div class="tablewrap" style="margin-top:10px"><table class="table"><thead><tr><th>No. Reg</th><th>Nama</th><th>Tarif/hari</th><th>Hari Bayar</th><th>Tidak Bayar</th><th>Total Bulan</th><th>Tanggal Tidak Bayar</th><th>Petugas</th></tr></thead><tbody>
-   ${rows.map(r=>`<tr><td class="reg">${esc(r.no_reg)}</td><td>${esc(r.nama_pedagang)}</td><td>${money(r.tarif)}</td><td><b>${r.days}/${daysInMonth}</b></td><td>${r.missing}</td><td><b>${money(r.total)}</b></td><td class="small">${r.missing?esc(r.missingDates||r.missing):'—'}</td><td>${esc(r.ops||'—')}</td></tr>`).join('')}
-   </tbody></table></div>
- </div>`;
+ const rows=DATA.map(r=>{const ps=PAYMENTS.filter(p=>p.master_id===r.id&&p.tanggal.slice(0,7)===m);return {...r,days:ps.length,total:ps.length*r.tarif,ops:[...new Set(ps.map(p=>p.petugas_nama))].join(", ")}}).sort((a,b)=>a.nama_pedagang.localeCompare(b.nama_pedagang));
+ document.getElementById("view-rekap").innerHTML=`<div class="card" style="margin-bottom:12px"><b>Rekap per pedagang — ${m}</b><div class="small muted">556 baris Data Gabungan dipertahankan.</div></div><div class="tablewrap"><table class="table"><thead><tr><th>No. Reg</th><th>Nama</th><th>Tarif/hari</th><th>Hari bayar</th><th>Total bulan</th><th>Petugas</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="reg">${esc(r.no_reg)}</td><td>${esc(r.nama_pedagang)}</td><td>${money(r.tarif)}</td><td><b>${r.days}</b></td><td><b>${money(r.total)}</b></td><td>${esc(r.ops||"—")}</td></tr>`).join("")}</tbody></table></div>`
 }
 function renderPetugas(){
  const m=month();const rows=Object.keys(PETUGAS).map(n=>{const ps=PAYMENTS.filter(p=>p.tanggal.slice(0,7)===m&&p.petugas_nama===n);return {n,count:ps.length,amount:ps.reduce((s,p)=>s+(DATA.find(r=>r.id===p.master_id)?.tarif||0),0)}})
