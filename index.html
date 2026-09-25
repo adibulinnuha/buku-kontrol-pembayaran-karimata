@@ -72,11 +72,34 @@ main{padding:16px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12p
 </main>
 <div class="modal" id="modal"><div class="modalbox"><div class="modalhead"><h3 id="modalTitle" style="margin:0">Kelola Data</h3><button class="x" onclick="closeModal()">×</button></div><div id="modalBody" style="margin-top:14px"></div></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL="https://xsvqxthqusuikocmnyki.supabase.co";
 const SUPABASE_KEY="sb_publishable_cfdw50qBEsZkTJ0KphFKPQ_ga0nkGI0";
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const API_BASE=SUPABASE_URL+"/rest/v1/";
+const API_HEADERS={"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
+async function apiSelect(table,params="") {
+ const res=await fetch(API_BASE+table+(params?"?"+params:""),{headers:API_HEADERS});
+ const text=await res.text();
+ if(!res.ok) throw new Error(text||res.statusText);
+ return text?JSON.parse(text):[];
+}
+async function apiInsert(table,row){
+ const res=await fetch(API_BASE+table,{method:"POST",headers:{...API_HEADERS,"Prefer":"return=representation"},body:JSON.stringify(row)});
+ const text=await res.text();
+ if(!res.ok) throw new Error(text||res.statusText);
+ const arr=text?JSON.parse(text):[]; return arr[0]||null;
+}
+async function apiUpdate(table,id,patch){
+ const res=await fetch(API_BASE+table+"?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{...API_HEADERS,"Prefer":"return=representation"},body:JSON.stringify(patch)});
+ const text=await res.text();
+ if(!res.ok) throw new Error(text||res.statusText);
+ const arr=text?JSON.parse(text):[]; return arr[0]||null;
+}
+async function apiDelete(table,id){
+ const res=await fetch(API_BASE+table+"?id=eq."+encodeURIComponent(id),{method:"DELETE",headers:API_HEADERS});
+ const text=await res.text();
+ if(!res.ok) throw new Error(text||res.statusText);
+}
 const PETUGAS={"PONIMAN":"197007022007011012","IKA WULANDARI":"199410022025212003"};
 let DATA=[], PAYMENTS=[], operator=localStorage.getItem("karimata_operator")||"", currentTab="bayar";
 const money=n=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n||0);
@@ -97,28 +120,28 @@ function selectPaymentDate(){
 }
 function selectOperator(name){if(!selectedDate()){alert("Tentukan tanggal pembayaran terlebih dahulu.");return}operator=name;localStorage.setItem("karimata_operator",name);document.querySelectorAll(".operator").forEach(x=>x.classList.remove("active"));document.getElementById(name==="PONIMAN"?"op1":"op2").classList.add("active");document.getElementById("operatorNotice").innerHTML="Petugas aktif: <b>"+name+"</b> · NIP "+PETUGAS[name];render()}
 async function loadAll(){
- const {data:master,error:e1}=await sb.from("karimata_master_registrasi").select("*").order("id");
- if(e1){alert("Gagal membaca database: "+e1.message);return}
- DATA=master||[];
- const {data:pay,error:e2}=await sb.from("karimata_pembayaran").select("*");
- if(e2){alert("Gagal membaca pembayaran: "+e2.message);return}
- PAYMENTS=pay||[];
- if(operator)selectOperator(operator); render();
+ try{
+  DATA=await apiSelect("karimata_master_registrasi","select=*&order=id.asc");
+  PAYMENTS=await apiSelect("karimata_pembayaran","select=*");
+  document.getElementById("sTotal").textContent=DATA.length;
+  if(operator && selectedDate()) selectOperator(operator);
+  render();
+ }catch(e){
+  console.error(e);
+  document.getElementById("sTotal").textContent="ERR";
+  document.getElementById("table").innerHTML='<div class="notice warn"><b>Gagal memuat data online.</b><br>Periksa koneksi internet atau kebijakan akses Supabase.<br><span class="small">'+esc(e.message)+'</span></div>';
+ }
 }
 async function recordPayment(id){
  if(!operator){alert("Pilih petugas terlebih dahulu.");return}
  const d=selectedDate(); if(!d){alert("Tentukan tanggal pembayaran terlebih dahulu.");return} if(!operator){alert("Pilih petugas terlebih dahulu.");return} if(idPay(id,d)){alert("Pembayaran pada tanggal terpilih sudah tercatat.");return}
- const {data,error}=await sb.from("karimata_pembayaran").insert({master_id:id,tanggal:d,petugas_nama:operator,petugas_nip:PETUGAS[operator]}).select().single();
- if(error){alert("Gagal menyimpan pembayaran: "+error.message);return}
- PAYMENTS.push(data);render();
+ try{const data=await apiInsert("karimata_pembayaran",{master_id:id,tanggal:d,petugas_nama:operator,petugas_nip:PETUGAS[operator]});PAYMENTS.push(data);render()}catch(error){alert("Gagal menyimpan pembayaran: "+error.message)}
 }
 async function undoPayment(id,date){
  const p=idPay(id,date); if(!p)return;
  if(p.petugas_nama!==operator){alert("Pembayaran ini dicatat oleh "+p.petugas_nama+".");return}
  if(!confirm("Batalkan pembayaran tanggal "+date+"?"))return;
- const {error}=await sb.from("karimata_pembayaran").delete().eq("id",p.id);
- if(error){alert("Gagal membatalkan: "+error.message);return}
- PAYMENTS=PAYMENTS.filter(x=>x.id!==p.id);render();
+ try{await apiDelete("karimata_pembayaran",p.id);PAYMENTS=PAYMENTS.filter(x=>x.id!==p.id);render()}catch(error){alert("Gagal membatalkan: "+error.message)}
 }
 function setTab(t){currentTab=t;["view-bayar","view-rekap","view-petugas"].forEach(x=>document.getElementById(x).style.display="none");document.getElementById("view-"+t).style.display="block";document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));if(t==="bayar")document.getElementById("tabBayar").classList.add("active");if(t==="rekap")document.getElementById("tabRekap").classList.add("active");if(t==="petugas")document.getElementById("tabPetugas").classList.add("active");render()}
 function render(){
@@ -157,14 +180,11 @@ function renderEditList(){
 }
 async function saveEdit(id){
  const patch={nama_pedagang:document.getElementById("n"+id).value.trim(),no_reg:document.getElementById("r"+id).value.trim(),tarif:Number(document.getElementById("t"+id).value||0),catatan:document.getElementById("c"+id).value.trim(),updated_at:new Date().toISOString()};
- const {data,error}=await sb.from("karimata_master_registrasi").update(patch).eq("id",id).select().single();
- if(error){alert("Gagal mengubah data: "+error.message);return}
- DATA=DATA.map(r=>r.id===id?data:r);renderEditList();render()
+ try{const data=await apiUpdate("karimata_master_registrasi",id,patch);if(!data){alert("Data tidak ditemukan atau tidak diizinkan diubah.");return}DATA=DATA.map(r=>r.id===id?data:r);renderEditList();render()}catch(error){alert("Gagal mengubah data: "+error.message)}
 }
 function closeModal(){document.getElementById("modal").classList.remove("show")}
 document.getElementById("paymentDate").value=today();
 selectPaymentDate();
-if(operator){selectOperator(operator)}
 loadAll();
 </script>
 </body></html>
