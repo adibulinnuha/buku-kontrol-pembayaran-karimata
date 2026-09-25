@@ -1,0 +1,9 @@
+{
+  "name": "Buku Kontrol Pembayaran Pasar Karimata",
+  "short_name": "Karimata",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f9",
+  "theme_color": "#0f3d5e",
+  "lang": "id"
+}

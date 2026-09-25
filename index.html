@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f3d5e">
+<meta name="description" content="Buku Kontrol Pembayaran Pasar Karimata">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Buku Kontrol Pembayaran — Pasar Karimata</title>
+<style>
+:root{--navy:#0f3d5e;--blue:#176b9f;--green:#15803d;--red:#b91c1c;--bg:#f3f6f9;--card:#fff;--text:#17202a;--muted:#667085;--line:#dbe3ea;--shadow:0 8px 24px rgba(15,61,94,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#0f3d5e,#176b9f);color:#fff;padding:18px 16px 22px;position:sticky;top:0;z-index:10;box-shadow:0 3px 15px #0002}
+.wrap{max-width:1200px;margin:auto}.brand{font-weight:800;font-size:20px}.sub{font-size:12px;opacity:.9;margin-top:3px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.btn,.tab,.operator{border:0;border-radius:10px;padding:10px 13px;font-weight:700;cursor:pointer}.btn{background:#fff;color:var(--navy)}.btn.dark{background:#0b3049;color:#fff}.btn.green{background:#15803d;color:#fff}.btn.red{background:#b91c1c;color:#fff}
+main{padding:16px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}.label{font-size:12px;color:var(--muted)}.value{font-size:23px;font-weight:800;margin-top:4px}
+.operators{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.operator{background:#e8eef3;color:var(--navy);border:2px solid transparent}.operator.active{background:#dff6e7;color:#12612f;border-color:#35a463}
+.controls{display:grid;grid-template-columns:1.2fr .7fr .7fr;gap:8px;margin:14px 0}.input,.select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:15px}
+.tabs{display:flex;gap:7px;overflow:auto;margin-bottom:12px}.tab{background:#e9eef2;color:#334155;white-space:nowrap}.tab.active{background:var(--navy);color:#fff}
+.notice{padding:11px 13px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:13px;margin-bottom:12px}
+.tablewrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:14px}.table{width:100%;border-collapse:collapse;min-width:760px}.table th,.table td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}.table th{background:#f7f9fb;position:sticky;top:0;z-index:1}.reg{font-weight:800;color:var(--navy)}.muted{color:var(--muted)}
+.pay{border:0;border-radius:9px;padding:9px 12px;font-weight:800;cursor:pointer;background:#eef2f5;color:#475569}.pay.done{background:#dcfce7;color:#166534}.pay:disabled{opacity:.7;cursor:default}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}.badge.warn{background:#fff7ed;color:#9a3412}.badge.ok{background:#dcfce7;color:#166534}
+.footer{color:#64748b;font-size:12px;padding:18px 2px 35px;text-align:center}
+.modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;padding:18px;z-index:30}.modal.show{display:flex}.modalbox{background:#fff;width:min(600px,100%);max-height:90vh;overflow:auto;border-radius:16px;padding:18px}.modalhead{display:flex;justify-content:space-between;align-items:center}.x{border:0;background:#eef2f5;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.formgrid .full{grid-column:1/-1}.formlabel{font-size:12px;color:var(--muted);margin-bottom:5px}.small{font-size:12px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.controls{grid-template-columns:1fr}.table{min-width:720px}.card{padding:12px}}
+@media(max-width:450px){.grid{grid-template-columns:1fr 1fr}.value{font-size:19px}.brand{font-size:18px}}
+</style>
+</head>
+<body>
+<header>
+<div class="wrap">
+  <div class="brand">Buku Kontrol Pembayaran — Pasar Karimata</div>
+  <div class="sub">Periode awal: Oktober 2026 · 556 baris Data Gabungan</div>
+  <div class="toolbar">
+    <button class="btn" onclick="setTab('bayar')">Pembayaran</button>
+    <button class="btn" onclick="setTab('rekap')">Rekap Pedagang</button>
+    <button class="btn" onclick="setTab('petugas')">Rekap Petugas</button>
+    <button class="btn" onclick="openDataEditor()">Kelola Data</button>
+  </div>
+</div>
+</header>
+
+<main class="wrap">
+<section class="card">
+  <div style="font-weight:800">Petugas pembayaran</div>
+  <div class="small muted" style="margin-top:3px">Pilih petugas sebelum mencatat pembayaran.</div>
+  <div class="operators">
+    <button class="operator" id="op1" onclick="selectOperator('PONIMAN')">PONIMAN<br><span class="small">NIP 197007022007011012</span></button>
+    <button class="operator" id="op2" onclick="selectOperator('IKA WULANDARI')">IKA WULANDARI<br><span class="small">NIP 199410022025212003</span></button>
+  </div>
+</section>
+
+<section class="grid" style="margin-top:12px">
+  <div class="card"><div class="label">Total Data Gabungan</div><div class="value" id="sTotal">556</div></div>
+  <div class="card"><div class="label">Sudah Bayar Bulan Ini</div><div class="value" id="sPaid">0</div></div>
+  <div class="card"><div class="label">Belum Bayar Hari Ini</div><div class="value" id="sUnpaid">556</div></div>
+  <div class="card"><div class="label">Total Pembayaran Bulan Ini</div><div class="value" id="sAmount">Rp0</div></div>
+</section>
+
+<section id="view-bayar">
+  <div class="notice" id="operatorNotice">Pilih salah satu petugas di atas sebelum menekan tombol BAYAR.</div>
+  <div class="controls">
+    <input class="input" id="search" placeholder="Cari nama atau nomor registrasi…" oninput="render()">
+    <select class="select" id="statusFilter" onchange="render()"><option value="all">Semua</option><option value="unpaid">Belum bayar hari ini</option><option value="paid">Sudah bayar hari ini</option></select>
+    <input class="input" id="month" type="month" value="2026-10" onchange="render()">
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tabBayar" onclick="setTab('bayar')">Pembayaran</button>
+    <button class="tab" id="tabRekap" onclick="setTab('rekap')">Rekap Pedagang</button>
+    <button class="tab" id="tabPetugas" onclick="setTab('petugas')">Rekap Petugas</button>
+  </div>
+  <div id="table"></div>
+</section>
+
+<section id="view-rekap" style="display:none"></section>
+<section id="view-petugas" style="display:none"></section>
+
+<div class="footer">
+  Kepala Pasar Karimata: <b>MUHAMMAD ADIB ULINNUHA</b> · NIP 199308252025211006<br>
+  Mengetahui — Koordinasi Wilayah 02 Karimata: <b>MOCH WINARNO</b> · NIP 197803282009011007
+</div>
+</main>
+
+<div class="modal" id="modal">
+ <div class="modalbox">
+  <div class="modalhead"><h3 id="modalTitle" style="margin:0">Kelola Data</h3><button class="x" onclick="closeModal()">×</button></div>
+  <div id="modalBody" style="margin-top:14px"></div>
+ </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const PETUGAS={
+ "PONIMAN":"197007022007011012",
+ "IKA WULANDARI":"199410022025212003"
+};
+let state=JSON.parse(localStorage.getItem("karimata_state")||'{"operator":"","payments":{},"edits":{}}');
+let currentTab="bayar";
+const money=n=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n||0);
+const today=()=>new Date().toISOString().slice(0,10);
+const ym=()=>document.getElementById("month").value||"2026-10";
+const key=(id,date)=>id+"|"+date;
+function save(){localStorage.setItem("karimata_state",JSON.stringify(state))}
+function selectOperator(name){state.operator=name;save();document.querySelectorAll(".operator").forEach(x=>x.classList.remove("active"));document.getElementById(name==="PONIMAN"?"op1":"op2").classList.add("active");document.getElementById("operatorNotice").innerHTML="Petugas aktif: <b>"+name+"</b> · NIP "+PETUGAS[name];render()}
+function isPaid(id,date){return !!state.payments[key(id,date)]}
+function paymentForMonth(id,month){return Object.entries(state.payments).filter(([k])=>k.startsWith(id+"|")&&k.slice( k.indexOf("|")+1, k.indexOf("|")+8)===month).map(([k,v])=>({date:k.split("|")[1],...v}))}
+function effective(r){return {...r,...(state.edits[r.id]||{})}}
+function setTab(t){currentTab=t;["view-bayar","view-rekap","view-petugas"].forEach(x=>document.getElementById(x).style.display="none");document.getElementById("view-"+t).style.display="block";document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));if(t==="bayar")document.getElementById("tabBayar").classList.add("active");if(t==="rekap")document.getElementById("tabRekap").classList.add("active");if(t==="petugas")document.getElementById("tabPetugas").classList.add("active");render()}
+function recordPayment(id){
+ if(!state.operator){alert("Pilih petugas terlebih dahulu.");return}
+ const d=today(), k=key(id,d);
+ if(state.payments[k]){alert("Pembayaran hari ini sudah tercatat.");return}
+ state.payments[k]={operator:state.operator,nip:PETUGAS[state.operator],time:new Date().toISOString()};
+ save();render();
+}
+function undoPayment(id,date){
+ const p=state.payments[key(id,date)]; if(!p)return;
+ if(p.operator!==state.operator){alert("Pembayaran hanya dapat dibatalkan oleh petugas yang mencatatnya.");return}
+ if(!confirm("Batalkan pembayaran tanggal "+date+" untuk data ini?"))return;
+ delete state.payments[key(id,date)];save();render();
+}
+function render(){
+ const month=ym();
+ const paidMonth=Object.entries(state.payments).filter(([k])=>k.split("|")[1].slice(0,7)===month);
+ const paidToday=paidMonth.filter(([k])=>k.split("|")[1]===today());
+ const amount=paidMonth.reduce((s,[k])=>s+(effective(DATA.find(r=>String(r.id)===k.split("|")[0]))?.tarif||0),0);
+ document.getElementById("sTotal").textContent=DATA.length;
+ document.getElementById("sPaid").textContent=new Set(paidMonth.map(([k])=>k.split("|")[0])).size;
+ document.getElementById("sUnpaid").textContent=Math.max(0,DATA.length-paidToday.length);
+ document.getElementById("sAmount").textContent=money(amount);
+ if(currentTab==="bayar")renderBayar(); else if(currentTab==="rekap")renderRekap(); else renderPetugas();
+}
+function renderBayar(){
+ const q=(document.getElementById("search").value||"").toLowerCase().trim(), f=document.getElementById("statusFilter").value, d=today();
+ let list=DATA.map(effective).filter(r=>(!q||r.nama.toLowerCase().includes(q)||String(r.no_reg).includes(q)));
+ if(f==="paid")list=list.filter(r=>isPaid(r.id,d)); if(f==="unpaid")list=list.filter(r=>!isPaid(r.id,d));
+ const html=`<div class="tablewrap"><table class="table"><thead><tr><th>No. Reg</th><th>Nama</th><th>Tarif</th><th>Status hari ini</th><th>Petugas</th><th>Aksi</th></tr></thead><tbody>${
+ list.map(r=>{const p=state.payments[key(r.id,d)];return `<tr><td class="reg">${esc(r.no_reg)} ${duplicateBadge(r.no_reg)}</td><td><b>${esc(r.nama)}</b>${r.catatan?`<div class="muted small">${esc(r.catatan)}</div>`:""}</td><td>${money(r.tarif)}</td><td>${p?'<span class="badge ok">✓ SUDAH BAYAR</span>':'<span class="badge warn">BELUM BAYAR</span>'}</td><td>${p?esc(p.operator):"—"}</td><td>${p?`<button class="pay done" onclick="undoPayment(${r.id},'${d}')">✓ Tercatat</button>`:`<button class="pay" onclick="recordPayment(${r.id})">BAYAR</button>`}</td></tr>`}).join("")}</tbody></table></div>`;
+ document.getElementById("table").innerHTML=html||'<div class="card">Tidak ada data yang cocok.</div>';
+}
+function renderRekap(){
+ const month=ym(), list=DATA.map(effective);
+ const rows=list.map(r=>{const ps=paymentForMonth(r.id,month), total=ps.length*r.tarif;return {...r,days:ps.length,total,ops:[...new Set(ps.map(x=>x.operator))].join(", ")}}).sort((a,b)=>a.nama.localeCompare(b.nama));
+ document.getElementById("view-rekap").innerHTML=`<div class="card" style="margin-bottom:12px"><b>Rekap per pedagang — ${month}</b><div class="small muted">Setiap baris mengikuti Data Gabungan; nomor registrasi ganda tetap dipertahankan sebagai baris terpisah.</div></div><div class="tablewrap"><table class="table"><thead><tr><th>No. Reg</th><th>Nama</th><th>Tarif/hari</th><th>Hari bayar</th><th>Total bulan</th><th>Petugas</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="reg">${esc(r.no_reg)} ${duplicateBadge(r.no_reg)}</td><td>${esc(r.nama)}</td><td>${money(r.tarif)}</td><td><b>${r.days}</b></td><td><b>${money(r.total)}</b></td><td>${esc(r.ops||"—")}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function renderPetugas(){
+ const month=ym(); const list=DATA.map(effective);
+ const rows=Object.keys(PETUGAS).map(name=>{let count=0,amount=0;for(const [k,v] of Object.entries(state.payments)){const [id,date]=k.split("|");if(date.slice(0,7)===month&&v.operator===name){count++;const r=list.find(x=>String(x.id)===id);amount+=r?r.tarif:0}}return {name,count,amount}});
+ document.getElementById("view-petugas").innerHTML=`<div class="card" style="margin-bottom:12px"><b>Rekap petugas — ${month}</b></div><div class="tablewrap"><table class="table"><thead><tr><th>Petugas</th><th>NIP</th><th>Transaksi</th><th>Total</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${PETUGAS[r.name]}</td><td>${r.count}</td><td><b>${money(r.amount)}</b></td></tr>`).join("")}</tbody></table></div>`;
+}
+function duplicateBadge(reg){const n=DATA.filter(x=>x.no_reg===reg).length;return n>1?`<span class="badge warn">ganda ${n}x</span>`:""}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function openDataEditor(){
+ document.getElementById("modalTitle").textContent="Kelola Data Gabungan";
+ document.getElementById("modalBody").innerHTML=`<div class="notice">Perubahan master disimpan di perangkat ini. Untuk penggunaan bersama antar-HP, hubungkan aplikasi ke Supabase menggunakan berkas <b>supabase-schema.sql</b> dan konfigurasi yang disediakan.</div><input class="input" id="editSearch" placeholder="Cari nama atau nomor registrasi…" oninput="renderEditList()"><div id="editList" style="margin-top:10px"></div>`;
+ document.getElementById("modal").classList.add("show");renderEditList();
+}
+function renderEditList(){
+ const q=(document.getElementById("editSearch").value||"").toLowerCase();let list=DATA.map(effective).filter(r=>!q||r.nama.toLowerCase().includes(q)||r.no_reg.includes(q)).slice(0,80);
+ document.getElementById("editList").innerHTML=list.map(r=>`<div class="card" style="margin:8px 0"><div class="formgrid"><label><div class="formlabel">Nama</div><input class="input" id="n${r.id}" value="${esc(r.nama)}"></label><label><div class="formlabel">No. Reg</div><input class="input" id="r${r.id}" value="${esc(r.no_reg)}"></label><label><div class="formlabel">Tarif</div><input class="input" id="t${r.id}" type="number" value="${r.tarif}"></label><label><div class="formlabel">Catatan</div><input class="input" id="c${r.id}" value="${esc(r.catatan||"")}"></label></div><button class="btn green" style="margin-top:9px" onclick="saveEdit(${r.id})">Simpan perubahan</button></div>`).join("")||"Tidak ditemukan.";
+}
+function saveEdit(id){state.edits[id]={nama:document.getElementById("n"+id).value.trim(),no_reg:document.getElementById("r"+id).value.trim(),tarif:Number(document.getElementById("t"+id).value||0),catatan:document.getElementById("c"+id).value.trim()};save();renderEditList();render()}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+render();
+</script>
+</body>
+</html>
